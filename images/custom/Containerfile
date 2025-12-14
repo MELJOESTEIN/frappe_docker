@@ -110,7 +110,7 @@ RUN apt-get update \
 # apps.json includes
 ARG APPS_JSON_BASE64
 RUN if [ -n "${APPS_JSON_BASE64}" ]; then \
-    mkdir /opt/frappe && echo "${APPS_JSON_BASE64}" | base64 -d > /opt/frappe/apps.json; \
+    mkdir /opt/frappe && echo "${APPS_JSON_BASE64}" | base64 -d -w 0 > /opt/frappe/apps.json; \
   fi
 
 USER frappe
