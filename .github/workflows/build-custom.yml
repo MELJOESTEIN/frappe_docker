@@ -1,5 +1,4 @@
 name: Build Custom Frappe CRM Image
-
 on:
   push:
     branches: [ main ]
@@ -11,21 +10,20 @@ jobs:
     permissions:
       contents: read
       packages: write
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
+      
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
+      
       - name: Login to GHCR
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-
+      
       - name: Build and push
         uses: docker/build-push-action@v5
         with:
@@ -35,3 +33,5 @@ jobs:
           tags: ghcr.io/meljoestein/frappe-crm:latest
           build-args: |
             APPS_JSON_BASE64=${{ secrets.APPS_JSON_BASE64 }}
+          secrets: |
+            ssh_private_key=${{ secrets.SSH_PRIVATE_KEY }}
