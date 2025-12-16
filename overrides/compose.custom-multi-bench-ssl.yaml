@@ -1,8 +1,3 @@
-# =============================================
-# OVERRIDE CUSTOM MULTI-BENCH SSL - Traefik + Routing wildcard auto
-# Le Momentum CRM SaaS - Multi-tenant
-# =============================================
-
 services:
   traefik:
     image: traefik:v2.11
@@ -15,7 +10,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - traefik-acme:/letsencrypt
     command:
-      - --log.level=${TRAEFIK_LOG_LEVEL:-ERROR}
+      - --log.level=INFO
+      - --accesslog=true
       - --providers.docker=true
       - --providers.docker.exposedbydefault=false
       - --providers.docker.network=frappe_network
@@ -26,37 +22,36 @@ services:
       - --entrypoints.web.http.redirections.entrypoint.permanent=true
       - --certificatesresolvers.myresolver.acme.email=${TRAEFIK_ACME_EMAIL}
       - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
-      - --certificatesresolvers.myresolver.acme.tlschallenge=true
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.dummy.rule=Host(`lemomentum.tech`)"
-      - "traefik.http.routers.dummy.entrypoints=websecure"
-      - "traefik.http.routers.dummy.tls.certresolver=myresolver"
+      - --certificatesresolvers.myresolver.acme.httpchallenge=true
+      - --certificatesresolvers.myresolver.acme.httpchallenge.entrypoint=web
     networks:
       - frappe_network
 
   backend:
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frappe.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.lemomentum.tech`)"
+      - "traefik.http.routers.frappe.rule=Host(`lemomentum.tech`) || HostRegexp(`{subdomain:[a-z0-9-]+}.lemomentum.tech`)"
       - "traefik.http.routers.frappe.entrypoints=websecure"
       - "traefik.http.routers.frappe.tls.certresolver=myresolver"
+      - "traefik.http.routers.frappe.priority=1"
       - "traefik.http.services.frappe.loadbalancer.server.port=8000"
 
   frontend:
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frappe-assets.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.lemomentum.tech`) && PathPrefix(`/assets`)"
+      - "traefik.http.routers.frappe-assets.rule=(Host(`lemomentum.tech`) || HostRegexp(`{subdomain:[a-z0-9-]+}.lemomentum.tech`)) && PathPrefix(`/assets`)"
       - "traefik.http.routers.frappe-assets.entrypoints=websecure"
       - "traefik.http.routers.frappe-assets.tls.certresolver=myresolver"
+      - "traefik.http.routers.frappe-assets.priority=2"
       - "traefik.http.services.frappe-assets.loadbalancer.server.port=8000"
 
   websocket:
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frappe-socketio.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.lemomentum.tech`) && PathPrefix(`/socket.io`)"
+      - "traefik.http.routers.frappe-socketio.rule=(Host(`lemomentum.tech`) || HostRegexp(`{subdomain:[a-z0-9-]+}.lemomentum.tech`)) && PathPrefix(`/socket.io`)"
       - "traefik.http.routers.frappe-socketio.entrypoints=websecure"
       - "traefik.http.routers.frappe-socketio.tls.certresolver=myresolver"
+      - "traefik.http.routers.frappe-socketio.priority=2"
       - "traefik.http.services.frappe-socketio.loadbalancer.server.port=9000"
 
 volumes:
