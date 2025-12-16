@@ -1,0 +1,44 @@
+# =============================================
+# OVERRIDE CUSTOM MULTI-BENCH SSL - Routing wildcard auto + SSL Let’s Encrypt
+# Le Momentum CRM SaaS - Multi-tenant
+# =============================================
+
+services:
+  traefik:
+    command:
+      - --log.level=ERROR
+      - --providers.docker=true
+      - --providers.docker.exposedbydefault=false
+      - --providers.docker.network=frappe_network
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --entrypoints.web.http.redirections.entryPoint.to=websecure
+      - --entrypoints.web.http.redirections.entryPoint.scheme=https
+      - --entrypoints.web.http.redirections.entrypoint.permanent=true
+      - --certificatesresolvers.myresolver.acme.email=${TRAEFIK_ACME_EMAIL}
+      - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
+      - --certificatesresolvers.myresolver.acme.tlschallenge=true
+
+  backend:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frappe.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.lemomentum.tech`)"
+      - "traefik.http.routers.frappe.entrypoints=websecure"
+      - "traefik.http.routers.frappe.tls.certresolver=myresolver"
+      - "traefik.http.services.frappe.loadbalancer.server.port=8000"
+
+  frontend:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frappe-assets.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.lemomentum.tech`) && PathPrefix(`/assets`)"
+      - "traefik.http.routers.frappe-assets.entrypoints=websecure"
+      - "traefik.http.routers.frappe-assets.tls.certresolver=myresolver"
+      - "traefik.http.services.frappe-assets.loadbalancer.server.port=8000"
+
+  websocket:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frappe-socketio.rule=HostRegexp(`{subdomain:[a-z0-9-]+}.lemomentum.tech`) && PathPrefix(`/socket.io`)"
+      - "traefik.http.routers.frappe-socketio.entrypoints=websecure"
+      - "traefik.http.routers.frappe-socketio.tls.certresolver=myresolver"
+      - "traefik.http.services.frappe-socketio.loadbalancer.server.port=9000"
