@@ -109,14 +109,10 @@ RUN apt-get update \
 
 USER root
 ARG APPS_JSON_BASE64
-ARG GITHUB_TOKEN
 RUN if [ -n "${APPS_JSON_BASE64}" ]; then \
     mkdir -p /opt/frappe && \
     echo "${APPS_JSON_BASE64}" | base64 -d > /opt/frappe/apps.json && \
-    if [ -n "${GITHUB_TOKEN}" ]; then \
-      sed -i "s/GITHUB_TOKEN/${GITHUB_TOKEN}/g" /opt/frappe/apps.json; \
-    fi && \
-    echo "📁 Contenu de apps.json après substitution:" && \
+    echo "📁 Contenu de apps.json:" && \
     cat /opt/frappe/apps.json; \
   fi
 
@@ -124,11 +120,7 @@ USER frappe
 
 ARG FRAPPE_BRANCH=version-15
 ARG FRAPPE_PATH=https://github.com/frappe/frappe
-ARG GITHUB_TOKEN
 RUN export APP_INSTALL_ARGS="" && \
-  if [ -n "${GITHUB_TOKEN}" ]; then \
-    git config --global url."https://${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"; \
-  fi && \
   if [ -n "${APPS_JSON_BASE64}" ]; then \
     export APP_INSTALL_ARGS="--apps_path=/opt/frappe/apps.json"; \
     echo "📁 Contents of apps.json:" && \
@@ -147,8 +139,7 @@ RUN export APP_INSTALL_ARGS="" && \
     /home/frappe/frappe-bench && \
   cd /home/frappe/frappe-bench && \
   echo "{}" > sites/common_site_config.json && \
-  find apps -mindepth 1 -path "*/.git" | xargs rm -fr && \
-  git config --global --unset url."https://${GITHUB_TOKEN}@github.com/".insteadOf || true
+  find apps -mindepth 1 -path "*/.git" | xargs rm -fr
 
 FROM base AS backend
 

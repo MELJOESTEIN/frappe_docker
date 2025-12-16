@@ -38,4 +38,3 @@ jobs:
           cache-to: type=gha,mode=max
           build-args: |
             APPS_JSON_BASE64=${{ secrets.APPS_JSON_BASE64 }}
-            GITHUB_TOKEN=${{ secrets.GH_PAT }}
