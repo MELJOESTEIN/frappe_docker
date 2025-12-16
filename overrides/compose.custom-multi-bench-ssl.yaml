@@ -27,6 +27,11 @@ services:
       - --certificatesresolvers.myresolver.acme.email=${TRAEFIK_ACME_EMAIL}
       - --certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json
       - --certificatesresolvers.myresolver.acme.tlschallenge=true
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.dummy.rule=Host(`lemomentum.tech`)"
+      - "traefik.http.routers.dummy.entrypoints=websecure"
+      - "traefik.http.routers.dummy.tls.certresolver=myresolver"
     networks:
       - frappe_network
 
